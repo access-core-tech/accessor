@@ -1,9 +1,8 @@
 import aiochclient
 import aiohttp
 import sentry_sdk
-
-from connector_worker.models.resources import ResourceType
 from connector_worker.models.configs.db_config import ClickhouseDBConfig
+from connector_worker.models.resources import ResourceType
 from connector_worker.providers.db_providers.base_db_provider import BaseDBProvider
 from connector_worker.services.secret_storage import SecretStorageService
 
@@ -30,7 +29,7 @@ class ClickHouseProvider(BaseDBProvider):
         client = None
         try:
             client = await self._make_client(db_config)
-            await client.execute("SELECT 1")
+            await client.execute('SELECT 1')
             return True
         except Exception as e:
             sentry_sdk.capture_exception(e)
@@ -62,7 +61,7 @@ class ClickHouseProvider(BaseDBProvider):
         try:
             client = await self._make_client(db_config)
 
-            await client.execute(f"DROP USER IF EXISTS {username}")
+            await client.execute(f'DROP USER IF EXISTS {username}')
 
             # завершаем сессии пользовотеля
             await client.execute(

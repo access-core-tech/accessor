@@ -1,9 +1,7 @@
-from typing import Any
 import asyncpg
 import sentry_sdk
-
+from connector_worker.models.configs.db_config import PostgresSQLConfig
 from connector_worker.models.resources import ResourceType
-from connector_worker.models.configs.db_config import PostgresSQLConfig, BaseDBConfig
 from connector_worker.providers.db_providers.base_db_provider import BaseDBProvider
 from connector_worker.services.secret_storage import SecretStorageService
 
@@ -66,7 +64,7 @@ class PostgresSQLDBProvider(BaseDBProvider):
         try:
             conn = await self._make_connect(db_config)
 
-            user_exists = await conn.fetchval("SELECT 1 FROM pg_roles WHERE rolname = $1", username)
+            user_exists = await conn.fetchval('SELECT 1 FROM pg_roles WHERE rolname = $1', username)
 
             if user_exists:
                 await conn.execute(
@@ -81,11 +79,11 @@ class PostgresSQLDBProvider(BaseDBProvider):
                 await conn.execute(f'DROP USER IF EXISTS "{username}"')
 
             else:
-                sentry_sdk.capture_message(f"User {username} does not exist in PostgreSQL, skipping deletion")
+                sentry_sdk.capture_message(f'User {username} does not exist in PostgreSQL, skipping deletion')
 
         except Exception as ex:
             sentry_sdk.capture_exception(ex)
-            raise Exception(f"Failed to delete PostgreSQL user {username}: {str(ex)}")
+            raise Exception(f'Failed to delete PostgreSQL user {username}: {str(ex)}')
 
         finally:
             if conn:

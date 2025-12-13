@@ -1,9 +1,10 @@
 # services/secret_service/models.py
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import json
-from google.protobuf import timestamp_pb2, struct_pb2
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from google.protobuf import struct_pb2, timestamp_pb2
 
 
 @dataclass
@@ -33,22 +34,22 @@ class PutSecretRequest:
     def to_proto_dict(self) -> Dict:
         """Преобразует модель в словарь для protobuf"""
         result = {
-            "path": self.path,
-            "json_value": json.dumps(self.json_value) if not isinstance(self.json_value, str) else self.json_value,
+            'path': self.path,
+            'json_value': json.dumps(self.json_value) if not isinstance(self.json_value, str) else self.json_value,
         }
 
         if self.expires_at:
             timestamp = timestamp_pb2.Timestamp()
             timestamp.FromDatetime(self.expires_at)
-            result["expires_at"] = timestamp
+            result['expires_at'] = timestamp
 
         if self.metadata:
             struct = struct_pb2.Struct()
             struct.update(self.metadata)
-            result["metadata"] = struct
+            result['metadata'] = struct
 
         if self.if_version is not None:
-            result["if_version"] = self.if_version
+            result['if_version'] = self.if_version
 
         return result
 
@@ -68,7 +69,7 @@ class GetSecretResponse:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_proto(cls, proto_response) -> "GetSecretResponse":
+    def from_proto(cls, proto_response) -> 'GetSecretResponse':
         """Создает модель из protobuf response"""
         # Обработка JSON значения
         try:
@@ -93,13 +94,13 @@ class GetSecretResponse:
 
                 # Альтернативный способ для protobuf >= 3.12
                 if hasattr(ts_proto, 'GetCurrentTime'):
-                    from datetime import timezone
                     import datetime as dt
+                    from datetime import timezone
 
                     return dt.datetime.fromtimestamp(ts_proto.seconds + ts_proto.nanos / 1e9, tz=timezone.utc)
 
             except Exception as e:
-                print(f"Warning: Failed to convert timestamp: {e}")
+                print(f'Warning: Failed to convert timestamp: {e}')
             return None
 
         # Конвертируем timestamp поля

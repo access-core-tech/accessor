@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import datetime
+from abc import ABC, abstractmethod
 
 from connector_worker.models.access_requests import AccessRequest, DeprovisionRequest
 from connector_worker.models.resources import ResourceType

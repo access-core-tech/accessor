@@ -1,9 +1,8 @@
-from faststream import FastStream
-from faststream.kafka import KafkaBroker
-
 from connector_worker.config import settings
 from connector_worker.event_handlers.create_access import create_access_handler
 from connector_worker.event_handlers.revoke_access import revoke_access_handler
+from faststream import FastStream
+from faststream.kafka import KafkaBroker
 
 broker = KafkaBroker(settings.KAFKA_URL)
 

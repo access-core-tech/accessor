@@ -1,21 +1,16 @@
 # services/secret_service/client.py
 import logging
-from typing import Optional, List, Dict, Any
 from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional
+
 import grpc
 from grpc import aio
-
-from services.secret_service.protobuf import secret_service_pb2, secret_service_pb2_grpc
 from services.secret_service.models import (
-    InitStorageRequest,
-    InitStorageResponse,
-    UnsealRequest,
-    PutSecretRequest,
-    GetSecretRequest,
     GetSecretResponse,
-    DeleteSecretRequest,
+    InitStorageResponse,
+    PutSecretRequest,
 )
+from services.secret_service.protobuf import secret_service_pb2, secret_service_pb2_grpc
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +18,14 @@ logger = logging.getLogger(__name__)
 class SecretStoreClient:
     """Асинхронный клиент для SecretStore gRPC сервиса"""
 
-    def __init__(self, host: str = "localhost", port: int = 50051, timeout: int = 30):
+    def __init__(self, host: str = 'localhost', port: int = 50051, timeout: int = 30):
         """
         Args:
             host: Хост сервера gRPC
             port: Порт сервера
             timeout: Таймаут по умолчанию в секундах
         """
-        self.server_address = f"{host}:{port}"
+        self.server_address = f'{host}:{port}'
         self.timeout = timeout
         self._channel: Optional[aio.Channel] = None
         self._stub: Optional[secret_service_pb2_grpc.SecretStoreStub] = None
@@ -40,9 +35,9 @@ class SecretStoreClient:
         try:
             self._channel = aio.insecure_channel(self.server_address)
             self._stub = secret_service_pb2_grpc.SecretStoreStub(self._channel)
-            logger.info(f"Connection established to {self.server_address}")
+            logger.info(f'Connection established to {self.server_address}')
         except Exception as e:
-            logger.error(f"Failed to connect to {self.server_address}: {e}")
+            logger.error(f'Failed to connect to {self.server_address}: {e}')
             raise
 
     async def disconnect(self):
@@ -51,7 +46,7 @@ class SecretStoreClient:
             await self._channel.close()
             self._channel = None
             self._stub = None
-            logger.info("Connection closed")
+            logger.info('Connection closed')
 
     async def __aenter__(self):
         await self.connect()
@@ -77,24 +72,24 @@ class SecretStoreClient:
             ValueError: При невалидных аргументах
         """
         if shares <= 0 or threshold <= 0:
-            raise ValueError("shares and threshold must be positive integers")
+            raise ValueError('shares and threshold must be positive integers')
         if threshold > shares:
-            raise ValueError("threshold cannot be greater than shares")
+            raise ValueError('threshold cannot be greater than shares')
 
         request = secret_service_pb2.InitStorageRequest(shares=shares, threshold=threshold)
 
-        logger.info(f"Init storage request: shares={shares}, threshold={threshold}")
+        logger.info(f'Init storage request: shares={shares}, threshold={threshold}')
 
         try:
             response = await self._stub.InitStorage(request, timeout=timeout or self.timeout)
 
             result = InitStorageResponse(shares=list(response.shares))
-            logger.info(f"Storage initialized successfully, shares count: {len(result.shares)}")
+            logger.info(f'Storage initialized successfully, shares count: {len(result.shares)}')
 
             return result
 
         except grpc.aio.AioRpcError as e:
-            logger.error(f"Init storage failed: {e.code().name}: {e.details()}")
+            logger.error(f'Init storage failed: {e.code().name}: {e.details()}')
             raise
 
     async def unseal(self, shares: List[str], timeout: Optional[int] = None):
@@ -110,18 +105,18 @@ class SecretStoreClient:
             ValueError: При невалидных аргументах
         """
         if not shares:
-            raise ValueError("shares list cannot be empty")
+            raise ValueError('shares list cannot be empty')
 
         request = secret_service_pb2.UnsealRequest(shares=shares)
 
-        logger.info(f"Unseal request: shares count={len(shares)}")
+        logger.info(f'Unseal request: shares count={len(shares)}')
 
         try:
             await self._stub.Unseal(request, timeout=timeout or self.timeout)
-            logger.info("Storage unsealed successfully")
+            logger.info('Storage unsealed successfully')
 
         except grpc.aio.AioRpcError as e:
-            logger.error(f"Unseal failed: {e.code().name}: {e.details()}")
+            logger.error(f'Unseal failed: {e.code().name}: {e.details()}')
             raise
 
     async def seal(self, timeout: Optional[int] = None):
@@ -136,14 +131,14 @@ class SecretStoreClient:
         """
         request = secret_service_pb2.SealRequest()
 
-        logger.info("Seal request")
+        logger.info('Seal request')
 
         try:
             await self._stub.Seal(request, timeout=timeout or self.timeout)
-            logger.info("Storage sealed successfully")
+            logger.info('Storage sealed successfully')
 
         except grpc.aio.AioRpcError as e:
-            logger.error(f"Seal failed: {e.code().name}: {e.details()}")
+            logger.error(f'Seal failed: {e.code().name}: {e.details()}')
             raise
 
     async def put_secret(
@@ -171,7 +166,7 @@ class SecretStoreClient:
             ValueError: При невалидных аргументах
         """
         if not path:
-            raise ValueError("path cannot be empty")
+            raise ValueError('path cannot be empty')
 
         # Создаем модель запроса
         request_model = PutSecretRequest(
@@ -182,14 +177,14 @@ class SecretStoreClient:
         proto_data = request_model.to_proto_dict()
         request = secret_service_pb2.PutSecretRequest(**proto_data)
 
-        logger.info(f"Put secret request: path={path}, has_metadata={bool(metadata)}")
+        logger.info(f'Put secret request: path={path}, has_metadata={bool(metadata)}')
 
         try:
             await self._stub.PutSecret(request, timeout=timeout or self.timeout)
-            logger.info(f"Secret saved successfully: path={path}")
+            logger.info(f'Secret saved successfully: path={path}')
 
         except grpc.aio.AioRpcError as e:
-            logger.error(f"Put secret failed for path={path}: {e.code().name}: {e.details()}")
+            logger.error(f'Put secret failed for path={path}: {e.code().name}: {e.details()}')
             raise
 
     async def get_secret(self, path: List[str], timeout: Optional[int] = None) -> Optional[GetSecretResponse]:
@@ -208,26 +203,26 @@ class SecretStoreClient:
             ValueError: При невалидных аргументах
         """
         if not path:
-            raise ValueError("path cannot be empty")
+            raise ValueError('path cannot be empty')
 
         request = secret_service_pb2.GetSecretRequest(path=path)
 
-        logger.info(f"Get secret request: path={path}")
+        logger.info(f'Get secret request: path={path}')
 
         try:
             response = await self._stub.GetSecret(request, timeout=timeout or self.timeout)
             result = GetSecretResponse.from_proto(response)
 
-            logger.info(f"Secret retrieved successfully: path={path}, version={result.version}")
+            logger.info(f'Secret retrieved successfully: path={path}, version={result.version}')
 
             return result
 
         except grpc.aio.AioRpcError as e:
             if e.code() == grpc.StatusCode.NOT_FOUND:
-                logger.warning(f"Secret not found: path={path}")
+                logger.warning(f'Secret not found: path={path}')
                 return None
             else:
-                logger.error(f"Get secret failed for path={path}: {e.code().name}: {e.details()}")
+                logger.error(f'Get secret failed for path={path}: {e.code().name}: {e.details()}')
                 raise
 
     async def delete_secret(self, path: List[str], if_version: Optional[int] = None, timeout: Optional[int] = None):
@@ -244,23 +239,23 @@ class SecretStoreClient:
             ValueError: При невалидных аргументах
         """
         if not path:
-            raise ValueError("path cannot be empty")
+            raise ValueError('path cannot be empty')
 
         request = secret_service_pb2.DeleteSecretRequest(
             path=path, if_version=if_version if if_version is not None else 0
         )
 
-        logger.info(f"Delete secret request: path={path}, if_version={if_version}")
+        logger.info(f'Delete secret request: path={path}, if_version={if_version}')
 
         try:
             await self._stub.DeleteSecret(request, timeout=timeout or self.timeout)
-            logger.info(f"Secret deleted successfully: path={path}")
+            logger.info(f'Secret deleted successfully: path={path}')
 
         except grpc.aio.AioRpcError as e:
             if e.code() == grpc.StatusCode.NOT_FOUND:
-                logger.warning(f"Secret not found for deletion: path={path}")
+                logger.warning(f'Secret not found for deletion: path={path}')
             else:
-                logger.error(f"Delete secret failed for path={path}: {e.code().name}: {e.details()}")
+                logger.error(f'Delete secret failed for path={path}: {e.code().name}: {e.details()}')
                 raise
 
     async def health_check(self, timeout: int = 5) -> bool:

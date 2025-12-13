@@ -1,22 +1,25 @@
+import enum
+import uuid
+from datetime import datetime
+
 from sqlalchemy import (
+    JSON,
     Column,
-    String,
-    Text,
-    Integer,
     DateTime,
     ForeignKey,
-    UniqueConstraint,
     Index,
-    JSON,
-    Enum as SQLEnum,
+    Integer,
     Interval,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-import enum
-from datetime import datetime
-import uuid
 
 Base = declarative_base()
 
@@ -25,32 +28,32 @@ Base = declarative_base()
 
 
 class JobStatus(str, enum.Enum):
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    SUCCEEDED = "succeeded"
-    FAILED = "failed"
-    CANCELED = "canceled"
+    PENDING = 'pending'
+    IN_PROGRESS = 'in_progress'
+    SUCCEEDED = 'succeeded'
+    FAILED = 'failed'
+    CANCELED = 'canceled'
 
 
 class RequestStatus(str, enum.Enum):
-    PENDING = "pending"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    CANCELED = "canceled"
-    EXPIRED = "expired"
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
+    CANCELED = 'canceled'
+    EXPIRED = 'expired'
 
 
 class AccountStatus(str, enum.Enum):
-    ACTIVE = "active"
-    DEPROVISIONING = "deprovisioning"
-    DISABLED = "disabled"
-    EXPIRED = "expired"
-    ERROR = "error"
+    ACTIVE = 'active'
+    DEPROVISIONING = 'deprovisioning'
+    DISABLED = 'disabled'
+    EXPIRED = 'expired'
+    ERROR = 'error'
 
 
 class AccessMode(str, enum.Enum):
-    READ = "read"
-    WRITE = "write"
+    READ = 'read'
+    WRITE = 'write'
 
 
 # ==================== MODELS ====================
@@ -69,10 +72,10 @@ class Project(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    members = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
-    resources = relationship("Resource", back_populates="project")
-    access_requests = relationship("AccessRequest", back_populates="project")
-    provisioned_accounts = relationship("ProvisionedAccount", back_populates="project")
+    members = relationship('ProjectMember', back_populates='project', cascade='all, delete-orphan')
+    resources = relationship('Resource', back_populates='project')
+    access_requests = relationship('AccessRequest', back_populates='project')
+    provisioned_accounts = relationship('ProvisionedAccount', back_populates='project')
 
 
 class ProjectMember(Base):
@@ -96,7 +99,7 @@ class ProjectMember(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    project = relationship("Project", back_populates="members")
+    project = relationship('Project', back_populates='members')
 
 
 class Resource(Base):
@@ -120,9 +123,9 @@ class Resource(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    project = relationship("Project", back_populates="resources")
-    access_requests = relationship("AccessRequest", back_populates="resource")
-    provisioned_accounts = relationship("ProvisionedAccount", back_populates="resource")
+    project = relationship('Project', back_populates='resources')
+    access_requests = relationship('AccessRequest', back_populates='resource')
+    provisioned_accounts = relationship('ProvisionedAccount', back_populates='resource')
 
 
 class AccessRequest(Base):
@@ -156,12 +159,12 @@ class AccessRequest(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    project = relationship("Project", back_populates="access_requests")
-    resource = relationship("Resource", back_populates="access_requests")
+    project = relationship('Project', back_populates='access_requests')
+    resource = relationship('Resource', back_populates='access_requests')
     provisioning_job = relationship(
-        "ProvisioningJob", back_populates="access_request", uselist=False, cascade="all, delete-orphan"
+        'ProvisioningJob', back_populates='access_request', uselist=False, cascade='all, delete-orphan'
     )
-    provisioned_accounts = relationship("ProvisionedAccount", back_populates="access_request")
+    provisioned_accounts = relationship('ProvisionedAccount', back_populates='access_request')
 
     @property
     def is_approved(self):
@@ -198,7 +201,7 @@ class ProvisioningJob(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    access_request = relationship("AccessRequest", back_populates="provisioning_job")
+    access_request = relationship('AccessRequest', back_populates='provisioning_job')
 
     @property
     def duration(self):
@@ -237,11 +240,11 @@ class ProvisionedAccount(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    project = relationship("Project", back_populates="provisioned_accounts")
-    resource = relationship("Resource", back_populates="provisioned_accounts")
-    access_request = relationship("AccessRequest", back_populates="provisioned_accounts")
+    project = relationship('Project', back_populates='provisioned_accounts')
+    resource = relationship('Resource', back_populates='provisioned_accounts')
+    access_request = relationship('AccessRequest', back_populates='provisioned_accounts')
     deprovision_job = relationship(
-        "DeprovisionJob", back_populates="provisioned_account", uselist=False, cascade="all, delete-orphan"
+        'DeprovisionJob', back_populates='provisioned_account', uselist=False, cascade='all, delete-orphan'
     )
 
     @property
@@ -279,4 +282,4 @@ class DeprovisionJob(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    provisioned_account = relationship("ProvisionedAccount", back_populates="deprovision_job")
+    provisioned_account = relationship('ProvisionedAccount', back_populates='deprovision_job')

@@ -1,12 +1,18 @@
-from abc import ABC, abstractmethod
-from typing import Any
 import datetime
+from abc import ABC, abstractmethod
 
-from connector_worker.models.access_requests import AccessRequest, DeprovisionRequest, BaseAccessRequest
+from connector_worker.models.access_requests import (
+    AccessRequest,
+    BaseAccessRequest,
+    DeprovisionRequest,
+)
 from connector_worker.models.configs.db_config import BaseDBConfig
 from connector_worker.models.resources import ResourceType
 from connector_worker.providers.base import BaseProvider
-from connector_worker.providers.errors import ResourceNotAvailableException, ResourceUserConfigNotFound
+from connector_worker.providers.errors import (
+    ResourceNotAvailableException,
+    ResourceUserConfigNotFound,
+)
 from connector_worker.services.secret_storage import SecretStorageService
 from connector_worker.utils.secrets import generate_password, generate_username
 from connector_worker.utils.users import get_user_login_from_email
@@ -25,7 +31,7 @@ class BaseDBProvider(BaseProvider, ABC):
 
         if not await self.test_connection(db_config):
             raise ResourceNotAvailableException(
-                f"{access_request.resource_type} {access_request.resource_name} is not available. Check credentials."
+                f'{access_request.resource_type} {access_request.resource_name} is not available. Check credentials.'
             )
 
         # 2. Генерируем креды
@@ -58,14 +64,14 @@ class BaseDBProvider(BaseProvider, ABC):
 
         if not await self.test_connection(db_config):
             raise ResourceNotAvailableException(
-                f"{deprovision_request.resource_type} {deprovision_request.resource_name} is not available. Check credentials."
+                f'{deprovision_request.resource_type} {deprovision_request.resource_name} is not available. Check credentials.'
             )
 
         # 2. Получаем креды пользователя
         user_resource_username = await self.get_user_access(deprovision_request)
         if not user_resource_username:
             raise ResourceUserConfigNotFound(
-                f"Not found config for: {deprovision_request.resource_type} {deprovision_request.resource_name}"
+                f'Not found config for: {deprovision_request.resource_type} {deprovision_request.resource_name}'
             )
 
         # 3. Удаляем пользвателя из бд

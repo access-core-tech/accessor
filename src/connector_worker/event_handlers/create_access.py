@@ -1,6 +1,6 @@
+from connector_worker.config import logger
 from connector_worker.models.access_requests import AccessRequest
 from connector_worker.providers.select_provider import select_provider
-from connector_worker.config import logger
 
 
 async def create_access_handler(access_request: AccessRequest):

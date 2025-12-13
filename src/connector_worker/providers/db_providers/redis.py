@@ -1,8 +1,7 @@
 import redis.asyncio as redis
 import sentry_sdk
-
-from connector_worker.models.resources import ResourceType
 from connector_worker.models.configs.db_config import RedisDBConfig
+from connector_worker.models.resources import ResourceType
 from connector_worker.providers.db_providers.base_db_provider import BaseDBProvider
 from connector_worker.services.secret_storage import SecretStorageService
 
@@ -48,13 +47,13 @@ class RedisProvider(BaseDBProvider):
             await client.acl_setuser(
                 username=redis_username,
                 enabled=True,
-                passwords=[f"+{password}"],
+                passwords=[f'+{password}'],
                 commands=['+get', '+set', '+ping', '+exists', '+keys', '+ttl'],
                 keys=['*'],
                 channels=['*'],
             )
 
-            print(f"Redis ACL user created: {redis_username}")
+            print(f'Redis ACL user created: {redis_username}')
 
         except Exception as ex:
             sentry_sdk.capture_exception(ex)

@@ -1,8 +1,7 @@
 import aiomysql
 import sentry_sdk
-
-from connector_worker.models.resources import ResourceType
 from connector_worker.models.configs.db_config import MariaDBConfig
+from connector_worker.models.resources import ResourceType
 from connector_worker.providers.db_providers.base_db_provider import BaseDBProvider
 from connector_worker.services.secret_storage import SecretStorageService
 
@@ -81,7 +80,7 @@ class MariaDBProvider(BaseDBProvider):
 
                     await cursor.execute(f"DROP USER IF EXISTS '{username}'@'%'")
 
-                    await cursor.execute("FLUSH PRIVILEGES")
+                    await cursor.execute('FLUSH PRIVILEGES')
 
         except Exception as ex:
             sentry_sdk.capture_exception(ex)

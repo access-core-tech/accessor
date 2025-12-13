@@ -1,6 +1,7 @@
 from uuid import UUID
+
+from connector_worker.models.resources import ResourceAccesses, ResourceType
 from pydantic import BaseModel
-from connector_worker.models.resources import ResourceType, ResourceAccesses
 
 
 class BaseAccessRequest(BaseModel):

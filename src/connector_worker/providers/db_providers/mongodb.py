@@ -1,11 +1,10 @@
 import motor.motor_asyncio
-from pymongo.errors import PyMongoError, OperationFailure
 import sentry_sdk
-
-from connector_worker.models.resources import ResourceType
 from connector_worker.models.configs.db_config import MongoDBConfig
+from connector_worker.models.resources import ResourceType
 from connector_worker.providers.db_providers.base_db_provider import BaseDBProvider
 from connector_worker.services.secret_storage import SecretStorageService
+from pymongo.errors import PyMongoError
 
 
 class MongoDBProvider(BaseDBProvider):
@@ -46,11 +45,11 @@ class MongoDBProvider(BaseDBProvider):
             client = self._make_client(db_config)
 
             await client[db_config.database].command(
-                "createUser",
+                'createUser',
                 username,
                 pwd=password,
                 roles=[
-                    {"role": "read", "db": db_config.database},
+                    {'role': 'read', 'db': db_config.database},
                 ],
             )
 
@@ -67,23 +66,23 @@ class MongoDBProvider(BaseDBProvider):
             client = self._make_client(db_config)
 
             await client[db_config.database].command(
-                "dropUser",
+                'dropUser',
                 username,
             )
 
         except PyMongoError as e:
             sentry_sdk.capture_exception(e)
-            raise Exception(f"Failed to delete MongoDB user {username}: {str(e)}")
+            raise Exception(f'Failed to delete MongoDB user {username}: {str(e)}')
 
         finally:
             if client:
                 client.close()
 
     def _make_client(self, db_config: MongoDBConfig) -> motor.motor_asyncio.AsyncIOMotorClient:
-        auth_part = f"{db_config.user}:{db_config.password}@" if db_config.user and db_config.password else ""
-        host_part = f"{db_config.host}:{db_config.port}"
+        auth_part = f'{db_config.user}:{db_config.password}@' if db_config.user and db_config.password else ''
+        host_part = f'{db_config.host}:{db_config.port}'
 
         return motor.motor_asyncio.AsyncIOMotorClient(
-            f"mongodb://{auth_part}{host_part}/",
+            f'mongodb://{auth_part}{host_part}/',
             serverSelectionTimeoutMS=10000,
         )

@@ -1,15 +1,14 @@
 import datetime
 
-from services.secret_service import GetSecretResponse
-from services.secret_service.client import SecretStoreClient
 from connector_worker.config import settings
 from connector_worker.models.configs.db_config import (
-    PostgresSQLConfig,
-    MongoDBConfig,
-    MariaDBConfig,
     ClickhouseDBConfig,
+    MariaDBConfig,
+    MongoDBConfig,
+    PostgresSQLConfig,
     RedisDBConfig,
 )
+from services.secret_service.client import SecretStoreClient
 
 
 class SecretStorageService:

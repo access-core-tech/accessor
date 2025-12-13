@@ -3,13 +3,13 @@ from enum import StrEnum
 
 class ResourceType(StrEnum):
     # Базы данных
-    POSTGRESQL = "postgresql"
+    POSTGRESQL = 'postgresql'
     MONGODB = 'mongodb'
     MARIA_DB = 'mariadb'
     CLICKHOUSE = 'clickhouse'
 
     # Кеши
-    REDIS = "redis"
+    REDIS = 'redis'
 
 
 class ResourceAccesses(StrEnum):
