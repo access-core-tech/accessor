@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class SecretStoreClient:
     """Асинхронный клиент для SecretStore gRPC сервиса"""
 
-    def __init__(self, host: str = 'localhost', port: int = 50051, timeout: int = 30):
+    def __init__(self, host: str = 'localhost', port: int = 6668, timeout: int = 30):
         """
         Args:
             host: Хост сервера gRPC

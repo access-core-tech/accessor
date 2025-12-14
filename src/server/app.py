@@ -1,15 +1,16 @@
 from fast_grpc import FastGRPC
 
-from server.views.access_request import access_request_view
-from server.views.access_requests_accounts import resource_access_accounts_view
+from server.views.access_requests import access_request_view
+from server.views.access_accounts import resource_access_accounts_view
 from server.views.resources import resource_view
-from server.views.revokes_access_request import revoke_requests_view
+from server.views.revoke_access import revoke_requests_view
 
 app = FastGRPC()
 
 app.unary_unary()(resource_view.get_resource)
 app.unary_unary()(resource_view.get_resources)
 app.unary_unary()(resource_view.create_resource)
+app.unary_unary()(resource_view.update_resource)
 app.unary_unary()(resource_view.delete_resource)
 
 app.unary_unary()(access_request_view.get_access_request)

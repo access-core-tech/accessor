@@ -9,7 +9,8 @@ class BaseDBConfig(BaseModel):
     database: str
 
 
-class PostgresSQLConfig(BaseDBConfig): ...
+class PostgresSQLConfig(BaseDBConfig):
+    database: str = 'postgres'
 
 
 class MongoDBConfig(BaseDBConfig): ...

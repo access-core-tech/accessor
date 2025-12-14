@@ -1,285 +1,112 @@
-import enum
 import uuid
-from datetime import datetime
 
-from sqlalchemy import (
-    JSON,
-    Column,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    Interval,
-    String,
-    Text,
-    UniqueConstraint,
-)
-from sqlalchemy import (
-    Enum as SQLEnum,
-)
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, UUID, DateTime, Integer, Boolean, ForeignKey, Text
+from sqlalchemy.orm import relationship, declarative_base
+import datetime
 
 Base = declarative_base()
 
 
-# ==================== ENUMS ====================
-
-
-class JobStatus(str, enum.Enum):
-    PENDING = 'pending'
-    IN_PROGRESS = 'in_progress'
-    SUCCEEDED = 'succeeded'
-    FAILED = 'failed'
-    CANCELED = 'canceled'
-
-
-class RequestStatus(str, enum.Enum):
-    PENDING = 'pending'
-    APPROVED = 'approved'
-    REJECTED = 'rejected'
-    CANCELED = 'canceled'
-    EXPIRED = 'expired'
-
-
-class AccountStatus(str, enum.Enum):
-    ACTIVE = 'active'
-    DEPROVISIONING = 'deprovisioning'
-    DISABLED = 'disabled'
-    EXPIRED = 'expired'
-    ERROR = 'error'
-
-
-class AccessMode(str, enum.Enum):
-    READ = 'read'
-    WRITE = 'write'
-
-
-# ==================== MODELS ====================
-
-
-class Project(Base):
-    """Проекты внутри организаций"""
-
-    __tablename__ = 'project'
-    __table_args__ = ({'schema': 'provisioning_service'},)
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String, nullable=False, unique=True)
-    description = Column(Text)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    # Relationships
-    members = relationship('ProjectMember', back_populates='project', cascade='all, delete-orphan')
-    resources = relationship('Resource', back_populates='project')
-    access_requests = relationship('AccessRequest', back_populates='project')
-    provisioned_accounts = relationship('ProvisionedAccount', back_populates='project')
-
-
-class ProjectMember(Base):
-    """Участники проектов"""
-
-    __tablename__ = 'project_member'
-    __table_args__ = (
-        UniqueConstraint('project_id', 'user_id', name='uq_project_member_project_user'),
-        Index('idx_project_member_project_id', 'project_id'),
-        Index('idx_project_member_user_id', 'user_id'),
-        {'schema': 'provisioning_service'},
-    )
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(
-        UUID(as_uuid=True), ForeignKey('provisioning_service.project.id', ondelete='CASCADE'), nullable=False
-    )
-    user_id = Column(UUID(as_uuid=True), nullable=False)
-    role_id = Column(UUID(as_uuid=True))
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    # Relationships
-    project = relationship('Project', back_populates='members')
-
-
 class Resource(Base):
-    """Ресурсы (серверы, БД, сервисы)"""
+    __tablename__ = "resources"
 
-    __tablename__ = 'resource'
-    __table_args__ = (
-        UniqueConstraint('kind', 'external_ref', name='uq_resource_kind_ref'),
-        Index('idx_resource_project_id', 'project_id'),
-        Index('idx_resource_kind', 'kind'),
-        {'schema': 'provisioning_service'},
+    id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID, nullable=False, index=True)
+    resource_type = Column(String(50), nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        onupdate=datetime.datetime.now(datetime.UTC),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(UUID(as_uuid=True), ForeignKey('provisioning_service.project.id', ondelete='SET NULL'))
-    kind = Column(String, nullable=False)  # e.g., "postgres", "redis", "s3"
-    name = Column(String, nullable=False)
-    external_ref = Column(String)  # External system reference
-    resource_metadata = Column(JSON, default=dict, nullable=False, name='metadata')
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    # Relationships
-    project = relationship('Project', back_populates='resources')
-    access_requests = relationship('AccessRequest', back_populates='resource')
-    provisioned_accounts = relationship('ProvisionedAccount', back_populates='resource')
+    access_requests = relationship("AccessRequest", back_populates="resource")
+    access_accounts = relationship("AccessAccount", back_populates="resource")
 
 
 class AccessRequest(Base):
-    """Запросы на доступ к ресурсам"""
+    __tablename__ = "access_requests"
 
-    __tablename__ = 'access_request'
-    __table_args__ = (
-        Index('idx_access_request_project_id', 'project_id'),
-        Index('idx_access_request_resource_id', 'resource_id'),
-        Index('idx_access_request_requester_user_id', 'requester_user_id'),
-        Index('idx_access_request_approver_user_id', 'approver_user_id'),
-        Index('idx_access_request_status', 'status'),
-        Index('idx_access_request_expires_at', 'expires_at'),
-        {'schema': 'provisioning_service'},
+    id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    resource_id = Column(UUID, ForeignKey("resources.id"), nullable=False, index=True)
+
+    requester_uuid = Column(UUID, nullable=False, index=True)
+    request_name = Column(String(200), nullable=False)
+    ttl_minutes = Column(Integer, nullable=True)
+
+    status = Column(String(20), default='pending', nullable=False)  # pending, approved, denied
+    reviewer_uuid = Column(UUID, nullable=True, index=True)
+    review_comment = Column(Text, nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        onupdate=datetime.datetime.now(datetime.UTC),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(UUID(as_uuid=True), ForeignKey('provisioning_service.project.id', ondelete='SET NULL'))
-    resource_id = Column(
-        UUID(as_uuid=True), ForeignKey('provisioning_service.resource.id', ondelete='CASCADE'), nullable=False
-    )
-    requester_user_id = Column(UUID(as_uuid=True), nullable=False)
-    access_mode = Column(SQLEnum(AccessMode, name='access_mode', schema='provisioning_service'), nullable=False)
-    reason = Column(Text)
-    status = Column(SQLEnum(RequestStatus, name='request_status', schema='provisioning_service'), nullable=False)
-    requested_ttl = Column(Interval)  # Requested time-to-live
-    approver_user_id = Column(UUID(as_uuid=True))
-    decided_at = Column(DateTime(timezone=True))
-    expires_at = Column(DateTime(timezone=True))
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    # Relationships
-    project = relationship('Project', back_populates='access_requests')
-    resource = relationship('Resource', back_populates='access_requests')
-    provisioning_job = relationship(
-        'ProvisioningJob', back_populates='access_request', uselist=False, cascade='all, delete-orphan'
-    )
-    provisioned_accounts = relationship('ProvisionedAccount', back_populates='access_request')
-
-    @property
-    def is_approved(self):
-        return self.status == RequestStatus.APPROVED
-
-    @property
-    def is_expired(self):
-        if self.expires_at:
-            return datetime.utcnow() > self.expires_at
-        return False
+    resource = relationship("Resource", back_populates="access_requests")
 
 
-class ProvisioningJob(Base):
-    """Задачи на создание аккаунтов"""
+class AccessAccount(Base):
+    __tablename__ = "access_accounts"
 
-    __tablename__ = 'provisioning_job'
-    __table_args__ = (
-        UniqueConstraint('access_request_id', name='uq_provisioning_job_access_request'),
-        Index('idx_provisioning_job_access_request_id', 'access_request_id'),
-        Index('idx_provisioning_job_status', 'status'),
-        {'schema': 'provisioning_service'},
+    id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    resource_id = Column(UUID, ForeignKey("resources.id"), nullable=False, index=True)
+
+    user_uuid = Column(UUID, nullable=False, index=True)
+    access_level = Column(String(20), nullable=False)  # read, write, admin
+    granted_by = Column(UUID, nullable=False, index=True)
+    granted_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
+
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    access_request_id = Column(UUID, ForeignKey("access_requests.id"), nullable=True)
+    is_active = Column(Boolean, default=True, index=True)
+
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        onupdate=datetime.datetime.now(datetime.UTC),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    access_request_id = Column(
-        UUID(as_uuid=True), ForeignKey('provisioning_service.access_request.id', ondelete='CASCADE'), nullable=False
-    )
-    status = Column(SQLEnum(JobStatus, name='job_status', schema='provisioning_service'), nullable=False)
-    retries = Column(Integer, default=0, nullable=False)
-    last_error = Column(Text)
-    started_at = Column(DateTime(timezone=True))
-    finished_at = Column(DateTime(timezone=True))
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    # Relationships
-    access_request = relationship('AccessRequest', back_populates='provisioning_job')
-
-    @property
-    def duration(self):
-        if self.started_at and self.finished_at:
-            return (self.finished_at - self.started_at).total_seconds()
-        return None
+    resource = relationship("Resource", back_populates="access_accounts")
 
 
-class ProvisionedAccount(Base):
-    """Созданные аккаунты"""
+class RevokeRequest(Base):
+    __tablename__ = "revoke_requests"
 
-    __tablename__ = 'provisioned_account'
-    __table_args__ = (
-        UniqueConstraint('resource_id', 'external_account_id', name='uq_provisioned_account_resource_external'),
-        Index('idx_provisioned_account_project_id', 'project_id'),
-        Index('idx_provisioned_account_resource_id', 'resource_id'),
-        Index('idx_provisioned_account_owner_user_id', 'owner_user_id'),
-        Index('idx_provisioned_account_access_request_id', 'access_request_id'),
-        Index('idx_provisioned_account_status', 'status'),
-        {'schema': 'provisioning_service'},
+    id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    access_account_id = Column(UUID, nullable=False, index=True)
+
+    requester_uuid = Column(UUID, nullable=False, index=True)
+    reason = Column(Text, nullable=False)
+
+    status = Column(String(20), default='pending', nullable=False)  # pending, completed, failed
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    error_message = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        onupdate=datetime.datetime.now(datetime.UTC),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(UUID(as_uuid=True), ForeignKey('provisioning_service.project.id', ondelete='SET NULL'))
-    resource_id = Column(
-        UUID(as_uuid=True), ForeignKey('provisioning_service.resource.id', ondelete='CASCADE'), nullable=False
-    )
-    external_account_id = Column(String, nullable=False)  # ID in external system
-    owner_user_id = Column(UUID(as_uuid=True), nullable=False)
-    access_request_id = Column(
-        UUID(as_uuid=True), ForeignKey('provisioning_service.access_request.id', ondelete='CASCADE'), nullable=False
-    )
-    status = Column(SQLEnum(AccountStatus, name='account_status', schema='provisioning_service'), nullable=False)
-    valid_until = Column(DateTime(timezone=True))
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relationships
-    project = relationship('Project', back_populates='provisioned_accounts')
-    resource = relationship('Resource', back_populates='provisioned_accounts')
-    access_request = relationship('AccessRequest', back_populates='provisioned_accounts')
-    deprovision_job = relationship(
-        'DeprovisionJob', back_populates='provisioned_account', uselist=False, cascade='all, delete-orphan'
-    )
+class EventOutbox(Base):
+    __tablename__ = "event_outbox"
 
-    @property
-    def is_active(self):
-        return self.status == AccountStatus.ACTIVE
+    id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    event_type = Column(String(50), nullable=False, index=True)
+    payload = Column(Text, nullable=False)
+    status = Column(String(20), default='pending', nullable=False, index=True)
+    sent_at = Column(DateTime(timezone=True), nullable=True)
+    error_message = Column(Text, nullable=True)
+    retry_count = Column(Integer, default=0)
 
-    @property
-    def is_expired(self):
-        if self.valid_until:
-            return datetime.utcnow() > self.valid_until
-        return False
-
-
-class DeprovisionJob(Base):
-    """Задачи на удаление аккаунтов"""
-
-    __tablename__ = 'deprovision_job'
-    __table_args__ = (
-        UniqueConstraint('provisioned_account_id', name='uq_deprovision_job_account'),
-        Index('idx_deprovision_job_status', 'status'),
-        {'schema': 'provisioning_service'},
-    )
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    provisioned_account_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey('provisioning_service.provisioned_account.id', ondelete='CASCADE'),
-        nullable=False,
-    )
-    status = Column(SQLEnum(JobStatus, name='job_status', schema='provisioning_service'), nullable=False)
-    started_at = Column(DateTime(timezone=True))
-    finished_at = Column(DateTime(timezone=True))
-    last_error = Column(Text)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    # Relationships
-    provisioned_account = relationship('ProvisionedAccount', back_populates='deprovision_job')
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
