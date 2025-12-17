@@ -65,7 +65,7 @@ class ResourceItemUpdateRequest(BaseModel):
     id: UUID
     name: Optional[str] = None
     description: Optional[str] = None
-    admin_credentials: Optional[bytes] = None  # JSON в виде bytes
+    admin_credentials: Optional[bytes] = None
 
     @field_validator(
         'name',

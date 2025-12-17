@@ -45,6 +45,19 @@ class ResourceAccessAccountItemRequest(BaseModel):
     id: UUID
 
 
+class AccessAccountCredentialsRequest(BaseModel):
+    id: UUID
+
+
+class AccessAccountCredentialsResponse(BaseModel):
+    credentials: Optional[str] = None
+
+    @field_validator('credentials', mode='before')
+    @classmethod
+    def _validates_nulls(cls, v):
+        return validate_null_item(v)
+
+
 class ResourceAccessAccountItemResponse(BaseModel):
     access_account: Optional[AccessAccountResponse] = None
 

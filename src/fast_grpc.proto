@@ -16,11 +16,17 @@ service AccessorService {
   rpc CreateAccessRequest(AccessRequestCreateRequest) returns (AccessRequestItemSingleResponse);
   rpc ApproveAccess(AccessRequestStatusUpdateRequest) returns (AccessRequestStatusUpdateResponse);
   rpc DenyAccess(AccessRequestStatusUpdateRequest) returns (AccessRequestStatusUpdateResponse);
+  rpc GetAccountCredentials(AccessAccountCredentialsRequest) returns (AccessAccountCredentialsResponse);
   rpc GetResourceAccessAccount(ResourceAccessAccountItemRequest) returns (ResourceAccessAccountItemResponse);
   rpc GetResourcesAccessAccounts(ResourcesAccessAccountsListRequest) returns (ResourcesAccessAccountsListResponse);
   rpc GetRevoke(RevokeRequestItemRequest) returns (RevokeRequestItemResponse);
   rpc GetRevokes(RevokeRequestsListRequest) returns (RevokeRequestsListResponse);
   rpc RevokeAccess(RevokeAccessRequest) returns (RevokeRequestItemResponse);
+  rpc Seal(Empty) returns (SealResponse);
+  rpc Unseal(UnsealRequest) returns (UnsealResponse);
+  rpc IsSeal(Empty) returns (IsSealResponse);
+  rpc InitStorage(InitStorageRequest) returns (InitStorageResponse);
+  rpc GetServiceStatus(Empty) returns (ServiceStatusResponse);
 }
 
 message ResourceItemRequest {
@@ -68,6 +74,15 @@ message ResourceDeleteRequest {
 
 message Empty {
 
+}
+
+message AccessAccountCredentialsRequest {
+  string id = 1;
+}
+
+message AccessAccountCredentialsResponse {
+  bytes credentials = 1;
+  string error = 2;
 }
 
 message AccessRequestItemRequest {
@@ -179,4 +194,39 @@ message RevokeAccessRequest {
   string access_account_id = 1;
   string reason = 2;
   string requester_uuid = 3;
+}
+
+message SealResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UnsealRequest {
+  repeated string shares = 1;
+}
+
+message UnsealResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message IsSealResponse {
+  bool is_sealed = 1;
+}
+
+message InitStorageRequest {
+  int32 shares = 1;
+  int32 threshold = 2;
+}
+
+message InitStorageResponse {
+  bool success = 1;
+  string message = 2;
+  repeated string shares = 3;
+}
+
+message ServiceStatusResponse {
+  bool is_healthy = 1;
+  bool is_initialized = 2;
+  optional bool is_sealed = 3;
 }

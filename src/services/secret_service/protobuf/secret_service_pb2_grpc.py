@@ -72,6 +72,18 @@ class SecretStoreStub(object):
             response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             _registered_method=True,
         )
+        self.IsSeal = channel.unary_unary(
+            '/secret_service.v1.SecretStore/IsSeal',
+            request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            response_deserializer=secret__service__pb2.IsSealResponse.FromString,
+            _registered_method=True,
+        )
+        self.IsInit = channel.unary_unary(
+            '/secret_service.v1.SecretStore/IsInit',
+            request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            response_deserializer=secret__service__pb2.IsInitResponse.FromString,
+            _registered_method=True,
+        )
 
 
 class SecretStoreServicer(object):
@@ -113,6 +125,18 @@ class SecretStoreServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def IsSeal(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def IsInit(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SecretStoreServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -145,6 +169,16 @@ def add_SecretStoreServicer_to_server(servicer, server):
             servicer.DeleteSecret,
             request_deserializer=secret__service__pb2.DeleteSecretRequest.FromString,
             response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+        ),
+        'IsSeal': grpc.unary_unary_rpc_method_handler(
+            servicer.IsSeal,
+            request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            response_serializer=secret__service__pb2.IsSealResponse.SerializeToString,
+        ),
+        'IsInit': grpc.unary_unary_rpc_method_handler(
+            servicer.IsInit,
+            request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            response_serializer=secret__service__pb2.IsInitResponse.SerializeToString,
         ),
     }
     generic_handler = grpc.method_handlers_generic_handler('secret_service.v1.SecretStore', rpc_method_handlers)
@@ -325,6 +359,66 @@ class SecretStore(object):
             '/secret_service.v1.SecretStore/DeleteSecret',
             secret__service__pb2.DeleteSecretRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True,
+        )
+
+    @staticmethod
+    def IsSeal(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/secret_service.v1.SecretStore/IsSeal',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            secret__service__pb2.IsSealResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True,
+        )
+
+    @staticmethod
+    def IsInit(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/secret_service.v1.SecretStore/IsInit',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            secret__service__pb2.IsInitResponse.FromString,
             options,
             channel_credentials,
             insecure,

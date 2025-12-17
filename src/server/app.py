@@ -4,6 +4,7 @@ from server.views.access_requests import access_request_view
 from server.views.access_accounts import resource_access_accounts_view
 from server.views.resources import resource_view
 from server.views.revoke_access import revoke_requests_view
+from server.views.store_admin.view import secret_store_admin_view
 
 app = FastGRPC(name="AccessorService", auto_gen_proto=False)
 
@@ -21,7 +22,14 @@ app.unary_unary()(access_request_view.deny_access)
 
 app.unary_unary()(resource_access_accounts_view.get_resource_access_account)
 app.unary_unary()(resource_access_accounts_view.get_resources_access_accounts)
+app.unary_unary()(resource_access_accounts_view.get_account_credentials)
 
 app.unary_unary()(revoke_requests_view.get_revoke)
 app.unary_unary()(revoke_requests_view.get_revokes)
 app.unary_unary()(revoke_requests_view.revoke_access)
+
+app.unary_unary()(secret_store_admin_view.init_storage)
+app.unary_unary()(secret_store_admin_view.seal)
+app.unary_unary()(secret_store_admin_view.unseal)
+app.unary_unary()(secret_store_admin_view.is_seal)
+app.unary_unary()(secret_store_admin_view.get_service_status)

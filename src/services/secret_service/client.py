@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 import grpc
 from grpc import aio
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from services.secret_service.models import (
     GetSecretResponse,
     InitStorageResponse,
@@ -139,6 +140,54 @@ class SecretStoreClient:
 
         except grpc.aio.AioRpcError as e:
             logger.error(f'Seal failed: {e.code().name}: {e.details()}')
+            raise
+
+    async def is_seal(self, timeout: Optional[int] = None) -> bool:
+        """
+        Проверяет, запечатано ли хранилище
+
+        Returns:
+            True если хранилище запечатано, False в противном случае
+        """
+        try:
+            request = google_dot_protobuf_dot_empty__pb2.Empty()
+            response = await self._stub.IsSeal(request, timeout=timeout or self.timeout)
+
+            # Согласно протоколу, поле называется is_seal (в единственном числе)
+            return response.is_seal
+
+        except grpc.aio.AioRpcError as e:
+            logger.error(f"Failed to check seal status: {e.code().name}: {e.details()}")
+            # Если сервис недоступен, считаем что запечатано
+            if e.code() == grpc.StatusCode.UNAVAILABLE:
+                return True
+            raise
+        except Exception as e:
+            logger.error(f"Failed to check seal status: {str(e)}")
+            raise
+
+    async def is_init(self, timeout: Optional[int] = None) -> bool:
+        """
+        Проверяет, инициализировано ли хранилище
+
+        Returns:
+            True если хранилище инициализировано, False в противном случае
+        """
+        try:
+            request = google_dot_protobuf_dot_empty__pb2.Empty()
+            response = await self._stub.IsInit(request, timeout=timeout or self.timeout)
+
+            # Согласно протоколу, поле называется is_init
+            return response.is_init
+
+        except grpc.aio.AioRpcError as e:
+            logger.error(f"Failed to check init status: {e.code().name}: {e.details()}")
+            # Если сервис недоступен, считаем что не инициализировано
+            if e.code() == grpc.StatusCode.UNAVAILABLE:
+                return False
+            raise
+        except Exception as e:
+            logger.error(f"Failed to check init status: {str(e)}")
             raise
 
     async def put_secret(
