@@ -5,7 +5,7 @@ from server.views.access_accounts import resource_access_accounts_view
 from server.views.resources import resource_view
 from server.views.revoke_access import revoke_requests_view
 
-app = FastGRPC()
+app = FastGRPC(name="AccessorService", auto_gen_proto=False)
 
 app.unary_unary()(resource_view.get_resource)
 app.unary_unary()(resource_view.get_resources)

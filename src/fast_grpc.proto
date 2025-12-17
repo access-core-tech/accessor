@@ -1,0 +1,182 @@
+syntax = "proto3";
+package accessor_service.v1;
+option go_package = "github.com/access-core-tech/watchflow/api/accessor_service/v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+service AccessorService {
+  rpc GetResource(ResourceItemRequest) returns (ResourceItemResponse);
+  rpc GetResources(ResourcesListRequest) returns (ResourcesListResponse);
+  rpc CreateResource(ResourceItemCreateRequest) returns (ResourceItemResponse);
+  rpc UpdateResource(ResourceItemUpdateRequest) returns (ResourceItemResponse);
+  rpc DeleteResource(ResourceDeleteRequest) returns (Empty);
+  rpc GetAccessRequest(AccessRequestItemRequest) returns (AccessRequestItemSingleResponse);
+  rpc GetAccessesRequest(AccessRequestsListRequest) returns (AccessRequestsListResponse);
+  rpc CreateAccessRequest(AccessRequestCreateRequest) returns (AccessRequestItemSingleResponse);
+  rpc ApproveAccess(AccessRequestStatusUpdateRequest) returns (AccessRequestStatusUpdateResponse);
+  rpc DenyAccess(AccessRequestStatusUpdateRequest) returns (AccessRequestStatusUpdateResponse);
+  rpc GetResourceAccessAccount(ResourceAccessAccountItemRequest) returns (ResourceAccessAccountItemResponse);
+  rpc GetResourcesAccessAccounts(ResourcesAccessAccountsListRequest) returns (ResourcesAccessAccountsListResponse);
+  rpc GetRevoke(RevokeRequestItemRequest) returns (RevokeRequestItemResponse);
+  rpc GetRevokes(RevokeRequestsListRequest) returns (RevokeRequestsListResponse);
+  rpc RevokeAccess(RevokeAccessRequest) returns (RevokeRequestItemResponse);
+}
+
+message ResourceItemRequest {
+  string id = 1;
+}
+
+message ResourceItemWithId {
+  string project_id = 1;
+  string resource_type = 2;
+  string name = 3;
+  string id = 4;
+}
+
+message ResourceItemResponse {
+  ResourceItemWithId resource = 1;
+}
+
+message ResourcesListRequest {
+  string user_uuid = 1;
+  string project_id = 2;
+}
+
+message ResourcesListResponse {
+  repeated ResourceItemWithId resources = 1;
+}
+
+message ResourceItemCreateRequest {
+  string project_id = 1;
+  string resource_type = 2;
+  string name = 3;
+  string description = 4;
+  bytes admin_credentials = 5;
+}
+
+message ResourceItemUpdateRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  bytes admin_credentials = 4;
+}
+
+message ResourceDeleteRequest {
+  string id = 1;
+}
+
+message Empty {
+
+}
+
+message AccessRequestItemRequest {
+  string id = 1;
+}
+
+message AccessRequestItemResponse {
+  string id = 1;
+  string resource_id = 2;
+  string resource_type = 3;
+  string resource_name = 4;
+  string requester_uuid = 5;
+  string request_name = 6;
+  string status = 7;
+  int32 ttl_minutes = 8;
+  string created_at = 9;
+}
+
+message AccessRequestItemSingleResponse {
+  AccessRequestItemResponse access_request = 1;
+}
+
+message AccessRequestsListRequest {
+  string user_uuid = 1;
+  string project_id = 2;
+}
+
+message AccessRequestsListResponse {
+  repeated AccessRequestItemResponse access_requests = 1;
+}
+
+message AccessRequestCreateRequest {
+  string resource_id = 1;
+  string requester_uuid = 2;
+  string request_name = 3;
+  int32 ttl_minutes = 4;
+}
+
+message AccessRequestStatusUpdateRequest {
+  string id = 1;
+  string reviewer_uuid = 2;
+  string comment = 3;
+}
+
+message AccessRequestStatusUpdateResponse {
+  AccessRequestItemResponse access_request = 1;
+}
+
+message ResourceAccessAccountItemRequest {
+  string id = 1;
+}
+
+message AccessAccountResponse {
+  string id = 1;
+  string resource_id = 2;
+  string resource_name = 3;
+  string resource_type = 4;
+  string project_id = 5;
+  string user_uuid = 6;
+  string access_level = 7;
+  string granted_by = 8;
+  string granted_at = 9;
+  string expires_at = 10;
+  bool is_active = 11;
+}
+
+message ResourceAccessAccountItemResponse {
+  AccessAccountResponse access_account = 1;
+}
+
+message ResourcesAccessAccountsListRequest {
+  string user_uuid = 1;
+  string project_id = 2;
+}
+
+message ResourcesAccessAccountsListResponse {
+  repeated AccessAccountResponse access_accounts = 1;
+}
+
+message RevokeRequestItemRequest {
+  string id = 1;
+}
+
+message RevokeRequestResponse {
+  string id = 1;
+  string access_account_id = 2;
+  string requester_uuid = 3;
+  string reason = 4;
+  string status = 5;
+  string completed_at = 6;
+  string error_message = 7;
+  string created_at = 8;
+}
+
+message RevokeRequestItemResponse {
+  RevokeRequestResponse revoke_request = 1;
+}
+
+message RevokeRequestsListRequest {
+  string user_uuid = 1;
+  string project_id = 2;
+}
+
+message RevokeRequestsListResponse {
+  repeated RevokeRequestResponse revoke_requests = 1;
+}
+
+message RevokeAccessRequest {
+  string access_account_id = 1;
+  string reason = 2;
+  string requester_uuid = 3;
+}
