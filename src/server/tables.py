@@ -9,6 +9,7 @@ Base = declarative_base()
 
 class Resource(Base):
     __tablename__ = "resources"
+    __table_args__ = {'schema': 'accessor'}
 
     id = Column(UUID, primary_key=True, default=uuid.uuid4)
     project_id = Column(UUID, nullable=False, index=True)
@@ -29,9 +30,10 @@ class Resource(Base):
 
 class AccessRequest(Base):
     __tablename__ = "access_requests"
+    __table_args__ = {'schema': 'accessor'}
 
     id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    resource_id = Column(UUID, ForeignKey("resources.id"), nullable=False, index=True)
+    resource_id = Column(UUID, ForeignKey("accessor.resources.id"), nullable=False, index=True)
 
     requester_uuid = Column(UUID, nullable=False, index=True)
     request_name = Column(String(200), nullable=False)
@@ -54,9 +56,10 @@ class AccessRequest(Base):
 
 class AccessAccount(Base):
     __tablename__ = "access_accounts"
+    __table_args__ = {'schema': 'accessor'}
 
     id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    resource_id = Column(UUID, ForeignKey("resources.id"), nullable=False, index=True)
+    resource_id = Column(UUID, ForeignKey("accessor.resources.id"), nullable=False, index=True)
 
     user_uuid = Column(UUID, nullable=False, index=True)
     access_level = Column(String(20), nullable=False)  # read, write, admin
@@ -64,7 +67,7 @@ class AccessAccount(Base):
     granted_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
 
     expires_at = Column(DateTime(timezone=True), nullable=True)
-    access_request_id = Column(UUID, ForeignKey("access_requests.id"), nullable=True)
+    access_request_id = Column(UUID, ForeignKey("accessor.access_requests.id"), nullable=True)
     is_active = Column(Boolean, default=True, index=True)
 
     created_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
@@ -79,6 +82,7 @@ class AccessAccount(Base):
 
 class RevokeRequest(Base):
     __tablename__ = "revoke_requests"
+    __table_args__ = {'schema': 'accessor'}
 
     id = Column(UUID, primary_key=True, default=uuid.uuid4)
     access_account_id = Column(UUID, nullable=False, index=True)
@@ -100,6 +104,7 @@ class RevokeRequest(Base):
 
 class EventOutbox(Base):
     __tablename__ = "event_outbox"
+    __table_args__ = {'schema': 'accessor'}
 
     id = Column(UUID, primary_key=True, default=uuid.uuid4)
     event_type = Column(String(50), nullable=False, index=True)
