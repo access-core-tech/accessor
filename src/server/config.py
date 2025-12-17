@@ -1,7 +1,12 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        extra='ignore',
+        env_file='.env',
+    )
+
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost/postgres"
 
     KAFKA_URL: str = 'localhost:9092'

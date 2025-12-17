@@ -1,12 +1,14 @@
 from datetime import timedelta, timezone
 from logging import getLogger
 
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(extra='ignore')
+    model_config = SettingsConfigDict(
+        extra='ignore',
+        env_file='.env',
+    )
 
     DEBUG: bool = False
     SENTRY_DSN: str = ''
