@@ -1,17 +1,4 @@
 services:
-  postgres:
-    image: postgres:11.8
-    container_name: accessor-postgres
-    platform: linux/amd64
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./storage/postgres:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-
-
   mongodb:
     image: mongo:7.0
     container_name: connector_mongodb
@@ -65,48 +52,3 @@ services:
         hard: 262144
     profiles:
       - test-connector-clickhouse
-
-  redis:
-    image: redis:7.2-alpine
-    command: >
-      sh -c '
-      mkdir -p /usr/local/etc/redis &&
-      echo "user default on >admin_password ~* +@all" > /usr/local/etc/redis/users.acl &&
-      redis-server --aclfile /usr/local/etc/redis/users.acl
-      '
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./storage/redis_data:/data
-
-  kafka:
-    image: apache/kafka:4.1.1
-    container_name: accessor-kafka
-    environment:
-      - CLUSTER_ID=5L6g3nShT-eMCtK--X86sw
-      - KAFKA_NODE_ID=1
-      - KAFKA_PROCESS_ROLES=broker,controller
-      - KAFKA_LISTENERS=PLAINTEXT_HOST://:9092,PLAINTEXT_DOCKER://:9094,CONTROLLER://:9093
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT_HOST://localhost:9092,PLAINTEXT_DOCKER://kafka:9094
-      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT_HOST:PLAINTEXT,PLAINTEXT_DOCKER:PLAINTEXT,CONTROLLER:PLAINTEXT
-      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
-      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT_DOCKER
-      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-    ports:
-      - "9092:9092"
-      - "9094:9094"
-    volumes:
-      - ./kafka/data:/var/lib/kafka/data
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: accessor-kafka-ui
-    ports:
-      - "8081:8080"
-    environment:
-      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka:9094
-      - KAFKA_CLUSTERS_0_NAME=kraft
-      - KAFKA_UI_AUTH_ENABLED=false
-    depends_on:
-      - kafka
